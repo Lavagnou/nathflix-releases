@@ -4,7 +4,7 @@
  * @version 0.2.0
  * @author lavagnou
  * @requirements ["nathflix.plugin.js"]
- * @updateUrl https://raw.githubusercontent.com/lavagnou/dxbi-stremio-android/main/nathflix.theme.css
+ * @updateUrl https://raw.githubusercontent.com/lavagnou/nathflix-releases/main/nathflix.theme.css
  */
 /* Nathflix — Copyright (C) 2026 lavagnou. Based on dx.bi, Copyright (C) 2026 dx.bi (github.com/notdxbi/dxbi-stremio).
    Free software under the GNU General Public License, version 3 or later (see LICENSE and NOTICE.md). */
@@ -544,9 +544,10 @@ body[data-dx-route="board"] #app [class*="board-container"] [class*="nav-content
     display: none;
 }
 
-/* Show every item (stock hides some by screen width) */
-#app [class*="board-content-"]:not([class*="board-content-container"]) [class*="meta-row"] > [class*="meta-items-container"] > *,
-#app [class*="search-content"] [class*="meta-row"] > [class*="meta-items-container"] > * {
+/* Show every item (stock hides some by screen width), but never one the plugin takes out (kids
+   profiles, hidden titles: [data-dx-off] further down, which this more precise rule would beat) */
+#app [class*="board-content-"]:not([class*="board-content-container"]) [class*="meta-row"] > [class*="meta-items-container"] > *:not([data-dx-off]),
+#app [class*="search-content"] [class*="meta-row"] > [class*="meta-items-container"] > *:not([data-dx-off]) {
     display: block !important;
     flex: 0 0 calc(100% / var(--dx-cols)) !important;
     max-width: none !important;
@@ -2166,8 +2167,10 @@ html.dx-brand .dx-splash-mark {
     color: var(--dx-text);
 }
 
+/* (opaque: Stremio's own half opacity on top of the grey made episode dates hard to read) */
 #app [class*="video-container"] [class*="released-container"] {
     color: var(--dx-text-3);
+    opacity: 1;
 }
 
 #app [class*="video-container"] [class*="upcoming-watched-container"] > * {
@@ -2428,6 +2431,12 @@ html.dx-brand .dx-splash-mark {
 #app [class*="addons-content"] [class*="add-button-container"] * {
     color: #fff !important;
     font-weight: 700;
+}
+
+/* Nathflix's Order & backup button, the height of Add addon and the search box beside it */
+#app [class*="addons-content"] .dxe-addon-btn {
+    height: 2.5rem;
+    border-radius: var(--dx-radius);
 }
 
 #app [class*="addons-content"] label[class*="search-bar-container"] {
@@ -4871,6 +4880,32 @@ html.dx-mobile #app [class*="main-nav-bars-container"] nav[class*="horizontal-na
     left: var(--dx-gutter);
     right: var(--dx-gutter);
     width: auto;
+    /* (opaque: the wordmark and the profile button showed through it) */
+    background: var(--dx-surface);
+}
+
+/* The keyboard is up (plugin: html.dx-keyboard): the tab bar goes, it sat on top of the keyboard */
+html.dx-mobile.dx-keyboard #app [class*="main-nav-bars-container"] > nav[class*="vertical-nav-bar"] {
+    display: none;
+}
+
+/* A title's page: its top bar is see-through over the picture, and only its buttons take taps (the
+   bar caught the taps meant for what scrolled under it, Reviews among them) */
+html.dx-mobile #app [class*="metadetails-container"] > nav[class*="horizontal-nav-bar"] {
+    pointer-events: none;
+}
+
+html.dx-mobile #app [class*="metadetails-container"] > nav[class*="horizontal-nav-bar"] :is([class*="back-button-container"], [class*="buttons-container"] > *) {
+    pointer-events: auto;
+}
+
+/* No scroll bars: a finger scrolls (they showed as an 8 px strip at the side) */
+html.dx-mobile * {
+    scrollbar-width: none;
+}
+
+html.dx-mobile ::-webkit-scrollbar {
+    display: none;
 }
 
 /* Tabs: a bar along the bottom, icon over label, like the phone apps */
@@ -5117,6 +5152,8 @@ html.dx-mobile #app [class*="meta-preview-container"] [class*="action-buttons-co
 html.dx-mobile #app [class*="meta-preview-container"] [class*="action-button-container"][class*="wide"] {
     flex: 1 1 100%;
     justify-content: center;
+    /* (Stremio's space after it left Trailer narrower than Play above it) */
+    margin-right: 0;
 }
 
 html.dx-mobile #app [class*="metadetails-content"] > :is([class*="streams-list-container"], [class*="videos-list-container"]) {
@@ -5149,6 +5186,13 @@ html.dx-mobile #app [class*="streams-container"] > [class*="stream-container"]:h
 /* Discover: a tap opens the title's sheet (plugin), so no preview column beside the grid */
 html.dx-mobile #app [class*="discover-content"] > [class*="meta-preview-container"] {
     display: none !important;
+}
+
+/* The same margin both sides (Stremio's is only on the left, for its side bar: the grid and Filters
+   sat off-centre) */
+html.dx-mobile #app [class*="discover-content"] > [class*="catalog-container"] {
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
 }
 
 html.dx-mobile #app :is([class*="discover-content"], [class*="library-content"]) [class*="meta-items-container"] {
