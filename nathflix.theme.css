@@ -4682,6 +4682,14 @@ html.dx-light {
     transition: background-color 0.2s;
 }
 
+/* TV: the dot on show is simply filled. Its filling bar was the one thing moving on Home, and in an
+   Android app's page anything that moves, however small, has the whole screen redrawn: about 46 times
+   a second on a Fire TV Stick 4K Max, with the remote waiting behind it. (Not in light mode on a
+   computer: with it gone, the mpv test saw mpv's picture stand still behind the page, T-114) */
+.dx-tv .dx-hero-dot.is-active::after {
+    animation: none;
+}
+
 .dx-tv #app nav[class*="horizontal-nav-bar"] {
     transition: none !important;
 }
