@@ -1,7 +1,7 @@
 /**
  * @name Nathflix
  * @description The Nathflix experience: cinematic billboard, Netflix-style carousels, hover previews with trailers, ratings on posters, critic reviews, skip intro and up next, anime filler guide, new episode badges, watch stats and viewers, stream sorting & filters, a Netflix-style player with black-bar removal, night mode and subtitle sync, watch parties with friends, a cinematic intro and interface sounds. Use with the Nathflix theme.
- * @version 0.11.1
+ * @version 0.11.2
  * @author lavagnou
  * @updateUrl https://raw.githubusercontent.com/lavagnou/nathflix-releases/main/nathflix.plugin.js
  */
@@ -35,7 +35,7 @@
   // Stremio Enhanced loads each plugin as <script id="<file name>">, which tells us our settings key
   const SCRIPT_ID = (document.currentScript && document.currentScript.id) || "nathflix.plugin.js";
   const PLUGIN_KEY = SCRIPT_ID.replace(/\.plugin\.js$/, "");
-  const PLUGIN_VERSION = "0.11.1"; // kept in step with @version by tools/bundle-theme.mjs
+  const PLUGIN_VERSION = "0.11.2"; // kept in step with @version by tools/bundle-theme.mjs
   // Recent messages and errors, kept for problem reports (see `report`)
   const recent = { logs: [], errors: [] };
   const remember = (list, text) => {
@@ -4088,7 +4088,8 @@
       return null;
     },
 
-    FOCUSABLE: 'a[href], button:not([disabled]), input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])',
+    // (not Stremio's hidden file input, for files dropped on the window: nothing a remote can use)
+    FOCUSABLE: 'a[href], button:not([disabled]), input:not([type="hidden"]):not([type="file"]), select, textarea, [tabindex]:not([tabindex="-1"])',
     // Never selected: the hover card's pointer shield and the rows' arrows
     SKIP: ".dx-keyshield, .dx-arrow",
     // and in light mode, nothing in a title's details (its genres and cast, links to Discover and
@@ -4163,9 +4164,13 @@
       return now - since < 4000;
     },
 
-    // Nothing selected: the page itself, or Stremio's whole app (it takes the focus on some pages)
+    // Nothing selected: the page itself, or Stremio's whole app (it takes the focus on some pages), or
+    // something that can't be seen. A page restarted onto the player left the remote on Stremio's
+    // hidden file input: back on the episode's page, nothing showed selected and Play wasn't picked
     nothing(n) {
-      return !n || n === document.body || n === document.documentElement || n.id === "app";
+      if (!n || n === document.body || n === document.documentElement || n.id === "app") return true;
+      if (n.matches && n.matches('input[type="file"]')) return true;
+      return typeof n.checkVisibility === "function" && !n.checkVisibility();
     },
 
     // The screen of Nathflix's showing on top, if any
@@ -17817,6 +17822,14 @@
     episodes,
     calendarFill,
     report,
+    // Nathflix for Android's player went on to another episode (Next episode, or one picked in Episodes):
+    // its streams page, opened next, plays it as soon as its streams are in, as its own Play button would.
+    // It only showed the page before, and the episode waited for Play to be pressed
+    playOnArrival(videoId) {
+      if (typeof videoId !== "string" || !videoId) return;
+      episodePlay.pending = { videoId, until: Date.now() + 30000 };
+      scheduleSync();
+    },
     // Nathflix TV's player: intro, recap and credits times for an episode ([] when nobody has added them)
     async skipSegments(type, metaId, videoId) {
       if (!settings.skipButtons) return [];
